@@ -1,0 +1,121 @@
+services:
+  # ============================================================================
+  # Infrastructure Data Stores
+  # ============================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: shortener-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: shortener
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d shortener"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: shortener-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  # ============================================================================
+  # One-Off Alembic Migration Runners (Each service manages its own table)
+  # ============================================================================
+  api-service-migrate:
+    build:
+      context: ./api-service
+      dockerfile: Dockerfile
+    container_name: shortener-api-migrate
+    command: alembic upgrade head
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/shortener
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  analytics-backend-migrate:
+    build:
+      context: ./analytics-backend
+      dockerfile: Dockerfile
+    container_name: shortener-analytics-migrate
+    command: alembic upgrade head
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/shortener
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ============================================================================
+  # Application Services
+  # ============================================================================
+  api-service:
+    build:
+      context: ./api-service
+      dockerfile: Dockerfile
+    container_name: shortener-api-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/shortener
+      REDIS_URL: redis://redis:6379/0
+      REDIS_TTL_SECONDS: "3600"
+      MOCK_SQS: "true"
+      BASE_URL: "http://localhost:8000"
+      LOG_LEVEL: "INFO"
+    depends_on:
+      api-service-migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  analytics-backend:
+    build:
+      context: ./analytics-backend
+      dockerfile: Dockerfile
+    container_name: shortener-analytics-backend
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/shortener
+      CORS_ORIGINS: "*"
+      LOG_LEVEL: "INFO"
+    depends_on:
+      analytics-backend-migrate:
+        condition: service_completed_successfully
+
+  analytics-frontend:
+    build:
+      context: ./analytics-frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8001
+        VITE_SHORTENER_API_URL: http://localhost:8000
+    container_name: shortener-analytics-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - analytics-backend
+      - api-service
+
+volumes:
+  postgres_data:
+  redis_data:
