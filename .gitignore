@@ -236,7 +236,6 @@ analytics-frontend/dist/
 *.tfstate.*
 crash.log
 crash.*.log
-*.tfvars
 *.tfvars.json
 override.tf
 override.tf.json
@@ -244,3 +243,5 @@ override.tf.json
 *_override.tf.json
 .terraformrc
 terraform.rc
+*.tfplan
+tfplan*
