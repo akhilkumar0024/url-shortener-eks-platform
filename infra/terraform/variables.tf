@@ -58,3 +58,18 @@ variable "private_subnets" {
     }
   }
 }
+
+variable "eks_config" {
+  description = "EKS Cluster and Node Group configuration"
+  type = object({
+    cluster_name        = optional(string, "url_shortener_cluster")
+    cluster_version     = optional(string, "1.35")
+    node_group_name     = optional(string, "eks_url_shortener_ng")
+    node_instance_types = optional(list(string), ["t3.medium"])
+    desired_size        = optional(number, 2)
+    min_size            = optional(number, 1)
+    max_size            = optional(number, 3)
+  })
+  default = {}
+}
+

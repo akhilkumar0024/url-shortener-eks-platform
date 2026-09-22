@@ -22,3 +22,8 @@ output "aws_internet_gateway" {
   description = "ID of the IGW"
   value       = module.networking.aws_internet_gateway
 }
+
+output "cluster_details" {
+  description = "Details of the EKS Cluster"
+  value       = module.eks_cluster
+}

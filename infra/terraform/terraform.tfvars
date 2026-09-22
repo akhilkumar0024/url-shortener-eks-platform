@@ -22,3 +22,14 @@ public_subnets = {
     availability_zone = "ap-south-1b"
   }
 }
+
+eks_config = {
+  cluster_name        = "url_shortener_cluster"
+  cluster_version     = "1.35"
+  node_group_name     = "eks_url_shortener_ng"
+  node_instance_types = ["t3.medium"]
+  desired_size        = 2
+  min_size            = 1
+  max_size            = 3
+}
+
