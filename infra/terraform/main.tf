@@ -22,3 +22,6 @@ module "oidc" {
   cluster_oidc_issuer_url = module.eks_cluster.cluster_oidc_issuer_url
 }
 
+module "queues" {
+  source = "./modules/queues"
+}
