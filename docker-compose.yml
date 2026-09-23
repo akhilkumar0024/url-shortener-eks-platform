@@ -37,7 +37,7 @@ services:
   # One-Off Alembic Migration Runners (Each service manages its own table)
   api-service-migrate:
     build:
-      context: ./api-service
+      context: ./apps/api-service
       dockerfile: Dockerfile
     container_name: shortener-api-migrate
     command: alembic upgrade head
@@ -49,7 +49,7 @@ services:
 
   analytics-backend-migrate:
     build:
-      context: ./analytics-backend
+      context: ./apps/analytics-backend
       dockerfile: Dockerfile
     container_name: shortener-analytics-migrate
     command: alembic upgrade head
@@ -63,7 +63,7 @@ services:
 
   api-service:
     build:
-      context: ./api-service
+      context: ./apps/api-service
       dockerfile: Dockerfile
     container_name: shortener-api-service
     restart: unless-stopped
@@ -84,7 +84,7 @@ services:
 
   analytics-backend:
     build:
-      context: ./analytics-backend
+      context: ./apps/analytics-backend
       dockerfile: Dockerfile
     container_name: shortener-analytics-backend
     restart: unless-stopped
@@ -100,7 +100,7 @@ services:
 
   analytics-frontend:
     build:
-      context: ./analytics-frontend
+      context: ./apps/analytics-frontend
       dockerfile: Dockerfile
       args:
         VITE_API_URL: http://localhost:8001
