@@ -17,3 +17,8 @@ module "eks_cluster" {
   min_size            = var.eks_config.min_size
 }
 
+module "oidc" {
+  source                  = "./modules/oidc"
+  cluster_oidc_issuer_url = module.eks_cluster.cluster_oidc_issuer_url
+}
+
